@@ -1,0 +1,59 @@
+upstream fastcgi {
+    #server unix:/var/run/php-fpm.sock;
+    server php7:9000;
+}
+
+server {
+    listen       80;
+    server_name test.loc;
+    root /var/www/html/code;
+  include rewrite.conf;
+   
+
+    location ~ \.php/  {
+        rewrite ^(.*.php)/ $1 last;
+    }
+
+    ## Images
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+       expires max;
+       log_not_found off;
+       access_log off;
+       add_header ETag "";
+       }
+       
+    ## Fonts
+    location ~* \.(swf|eot|ttf|otf|woff|woff2)$ {
+    expires max;
+    log_not_found off;
+        access_log off;
+    add_header ETag "";
+    add_header Access-Control-Allow-Origin "de.abbott.loc, cdn.de.abbott.loc";
+    add_header Cache-Control "public";
+    }
+ 
+
+    location ~ \.php$ {
+       
+
+        expires        off; ## Do not cache dynamic content
+        fastcgi_pass   fastcgi;
+
+        fastcgi_connect_timeout 600;
+        fastcgi_read_timeout 600;
+        fastcgi_send_timeout 600;
+        fastcgi_buffer_size 4k;
+        fastcgi_buffers 512 4k;
+        fastcgi_busy_buffers_size 8k;
+        fastcgi_temp_file_write_size 256k;
+        fastcgi_intercept_errors off;
+
+
+        #fastcgi_param  MAGE_RUN_CODE store_view_1_w_1_g_1;
+        #fastcgi_param  MAGE_RUN_TYPE store;
+  
+        include        fastcgi_params;
+  	include fastcgi.conf;
+    }
+
+}
